@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Processing App</title>
+</head>
+<body>
+    <h3>تحميل ملفات Word أو PDF للمعالجة</h3>
+
+    <!-- File upload form -->
+    <form id="uploadForm" enctype="multipart/form-data">
+        <label for="fileUpload">اختر الملفات (Word أو PDF):</label>
+        <input type="file" name="files[]" id="fileUpload" multiple>
+        <button type="submit">تحميل</button>
+    </form>
+
+    <div id="uploadedFiles"></div>
+    
+    <h4>إزالة الأسطر:</h4>
+    <input type="radio" id="yes" name="remove_newlines" value="نعم" checked>
+    <label for="yes">نعم</label>
+    <input type="radio" id="no" name="remove_newlines" value="لا">
+    <label for="no">لا</label>
+
+    <button id="processButton">بدء المعالجة</button>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            let formData = new FormData();
+            let files = document.getElementById('fileUpload').files;
+            for (let i = 0; i < files.length; i++) {
+                formData.append('files[]', files[i]);
+            }
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('uploadedFiles').innerHTML = 
+                'تم تحميل الملفات بنجاح: ' + data.uploaded_files.join(', ');
+            });
+        });
+
+        document.getElementById('processButton').addEventListener('click', function () {
+            let files = document.getElementById('uploadedFiles').textContent;
+            let filesArray = files.replace('تم تحميل الملفات بنجاح: ', '').split(', ');
+
+            fetch('/process', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ uploaded_files: filesArray })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+            });
+        });
+    </script>
+</body>
+</html>
+
